@@ -24,7 +24,7 @@ keyphrase = "!lyrics "
 
 # Retrieves the song title from the given phrase
 def get_song_title(phrase):
-    if phrase.count('"') > 1:
+    if phrase.count('"') >= 2:
         return phrase[phrase.find('"') + 1:phrase.rfind('"')]
     else:
         print("The given phrase had an invalid amount of quotation marks to get the song title")
@@ -33,16 +33,23 @@ def get_song_title(phrase):
 
 # Retrieves the artist name from the given phrase
 def get_artist_name(phrase):
-    if phrase.count('"') > 1:
+    if phrase.count('"') >= 2:
         name = phrase[phrase.rfind('"') + 1:]
         # If there's a space at the front of name
-        if phrase[0] == " ":
+        if name[0] == " ":
             return name[1:]
         else:
             return name
     else:
         print("The given phrase had an invalid amount of quotation marks to get the artist name")
         return None
+
+
+def append_to_reply_list(comment_to_append):
+    comments_replied_to.append(comment_to_append.id)
+    with open("comments_replied_to.txt", "w") as f:
+        for comment_id in comments_replied_to:
+            f.write(comment_id + "\n")
 
 
 # Monitors the comment stream for activation phrase
@@ -63,34 +70,21 @@ for comment in subreddit.stream.comments():
             # If there were no errors in the comment
             if song_title is not None and artist_name is not None:
                 # Replies with the lyrics
-                reply = song_title + "\n\n[INSERT LYRICS HERE]"
-                comment.reply(reply)
-                print("Bot replied to: " + comment.author.name)
-                print("Reply contents: \n" + reply)
-
-                # To separate between responses
-                print("-------------------------------------------")
-
-                # Appends the comment ID to the comments_replied_to list
-                comments_replied_to.append(comment.id)
-                with open("comments_replied_to.txt", "w") as f:
-                    for comment_id in comments_replied_to:
-                        f.write(comment_id + "\n")
+                reply = '"' + song_title + '"' + " by " + artist_name + "\n\n[INSERT LYRICS HERE]"
             # If there were errors in the comment
             else:
-                # Replies with the lyrics
+                # Replies with an error message
                 reply = "There was an error in your comment's formatting. Make sure there are quotations marks " \
-                        "around ONLY the title and the artist name is directly afterwards. The keyphrase " + \
-                        keyphrase + " has to be called at the end of your comment."
-                comment.reply(reply)
-                print("Bot replied to: " + comment.author.name)
-                print("Reply contents: \n" + reply)
+                        "around ONLY the title and the artist name is directly afterwards. The keyphrase has to be " \
+                        "called at the end of your comment. "
 
-                # To separate between responses
-                print("-------------------------------------------")
+            # Sends the reply
+            comment.reply(reply)
+            print("Bot replied to: " + comment.author.name)
+            print("Reply contents: \n" + reply)
 
-                # Appends the comment ID to the comments_replied_to list
-                comments_replied_to.append(comment.id)
-                with open("comments_replied_to.txt", "w") as f:
-                    for comment_id in comments_replied_to:
-                        f.write(comment_id + "\n")
+            # To separate between responses
+            print("-------------------------------------------")
+
+            # Appends the comment ID to the comments_replied_to list
+            append_to_reply_list(comment)
